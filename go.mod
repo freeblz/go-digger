@@ -5,6 +5,7 @@ go 1.21.0
 require (
 	github.com/chromedp/cdproto v0.0.0-20230914224007-a15a36ccbc2e
 	github.com/chromedp/chromedp v0.9.2
+	github.com/joho/godotenv v1.5.1
 	github.com/xlzd/gotp v0.1.0
 )
 

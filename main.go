@@ -11,14 +11,40 @@ import (
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
+	"github.com/joho/godotenv"
 	"github.com/xlzd/gotp"
 )
 
-const SECRET = ""
-const USER = ""
-const PASS = ""
+func goDotEnvVariable(key string) string {
+
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		log.Fatal("Erro ao carregar arquivo .env")
+	}
+
+	return os.Getenv(key)
+}
 
 func main() {
+	SECRET := goDotEnvVariable("SECRET_KEY")
+	USER := goDotEnvVariable("USERNAME_JD")
+	PASS := goDotEnvVariable("PASSWORD_JD")
+
+    if len(SECRET) == 0 {
+        log.Fatal("Chave SECRET para autenticação em .env está vazio")
+    }
+
+    if len(USER) == 0 {
+        log.Fatal("Chave USER para autenticação em .env está vazio")
+    }
+
+    if len(PASS) == 0 {
+        log.Fatal("Chave PASS para autenticação em .env está vazio")
+    }
+
+
+
 	totp := gotp.NewDefaultTOTP(SECRET)
 
 	ctx, cancel := chromedp.NewContext(
@@ -60,7 +86,7 @@ func main() {
 			}
 			log.Printf("state: %s, completed: %s\n", ev.State.String(), completed)
 			if ev.State == browser.DownloadProgressStateCompleted {
-                fmt.Println(filename)
+				fmt.Println(filename)
 				done <- ev.GUID
 				close(done)
 			}
@@ -80,7 +106,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-    fmt.Println("Inciando!")
+	fmt.Println("Inciando!")
 	err = chromedp.Run(ctx,
 		chromedp.Navigate("https://jddig.deere.com/#"),
 	)
