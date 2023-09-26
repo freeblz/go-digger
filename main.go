@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/chromedp/cdproto/browser"
-	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
 	"github.com/joho/godotenv"
 	"github.com/xlzd/gotp"
@@ -32,15 +31,15 @@ func main() {
 	PASS := goDotEnvVariable("PASSWORD_JD")
 
     if len(SECRET) == 0 {
-        log.Fatal("Chave SECRET para autenticação em .env está vazio")
+        log.Fatal("Chave SECRET_KEY para autenticação em .env está vazio")
     }
 
     if len(USER) == 0 {
-        log.Fatal("Chave USER para autenticação em .env está vazio")
+        log.Fatal("Chave USERNAME_JD para autenticação em .env está vazio")
     }
 
     if len(PASS) == 0 {
-        log.Fatal("Chave PASS para autenticação em .env está vazio")
+        log.Fatal("Chave PASSWORD_JD para autenticação em .env está vazio")
     }
 
 
@@ -70,15 +69,9 @@ func main() {
 	defer cancel()
 
 	done := make(chan string, 1)
-	var filename string
 
 	chromedp.ListenTarget(ctx, func(ev interface{}) {
 		switch ev := ev.(type) {
-		case *network.EventResponseReceived:
-			resp := ev.Response
-			if disposition, ok := resp.Headers["Content-Disposition"].(string); ok && len(disposition) > 0 {
-				filename = disposition
-			}
 		case *browser.EventDownloadProgress:
 			completed := "(unknown)"
 			if ev.TotalBytes != 0 {
@@ -86,8 +79,7 @@ func main() {
 			}
 			log.Printf("state: %s, completed: %s\n", ev.State.String(), completed)
 			if ev.State == browser.DownloadProgressStateCompleted {
-				fmt.Println(filename)
-				done <- ev.GUID
+				done <- ev.State.String()
 				close(done)
 			}
 		}
@@ -106,7 +98,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Inciando!")
+	fmt.Println("Iniciando!")
 	err = chromedp.Run(ctx,
 		chromedp.Navigate("https://jddig.deere.com/#"),
 	)
