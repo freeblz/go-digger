@@ -63,6 +63,7 @@ func main() {
 	if _, err := os.Stat(wd); os.IsNotExist(err) {
 		log.Fatalf("Path: %s is invalid", wd)
 	}
+
 	isHeadless := true
 	for i := 0; i < len(os.Args); i++ {
 		if os.Args[i] == "--GUI" {
@@ -122,6 +123,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+    log.Print("Conectado a https://jddig.deere.com/")
 
 	oktaLogin := chromedp.Tasks{
 		chromedp.WaitVisible(`#okta-sign-in > div.auth-content > div > div > div > a`, chromedp.NodeVisible),
@@ -162,7 +164,6 @@ func main() {
 		chromedp.Click(`#okta-signin-submit`, chromedp.ByID),
 	}
 
-	var temp string
 	abrirTabelaDig := chromedp.Tasks{
 		chromedp.WaitVisible("#eaCheckbox", chromedp.ByQuery),
 		chromedp.Sleep(5 * time.Second),
@@ -173,7 +174,7 @@ func main() {
                 document.querySelector("#dijit_form_Button_10 > span.dijitReset.dijitInline.dijitIcon.dijitIconTable").click()
                 return "Tabela do dig aberta"
             })()
-        `, &temp),
+        `, nil),
 	}
 
 	selecionaOrganizacoes := chromedp.Tasks{
@@ -215,6 +216,8 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
+    log.Print("Login e senha inseridos na okta")
+
 	err = chromedp.Run(ctx, oktaActuallySetToOkta)
 
 	fmt.Printf("Precisou selecionar: %t\n", teveQueSelecionar)
@@ -229,45 +232,50 @@ func main() {
 			chromedp.WaitVisible(`#input72`, chromedp.ByID),
 			chromedp.SetValue(`#input72`, totp.Now(), chromedp.ByID),
 			chromedp.Click(`#form66 > div.o-form-button-bar > input`, chromedp.NodeVisible)}
-
 	}
+
 
 	err = chromedp.Run(ctx, oktaOtp)
 
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+    log.Printf("Autenticado na okta com sucesso, 2fa: %s", totp.Now())
 
 	err = chromedp.Run(ctx, jdLogin)
 
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+    log.Print("Segunda parte do login na John Deere realizado")
 
 	err = chromedp.Run(ctx, abrirTabelaDig)
-	fmt.Println(temp)
 
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+    log.Print("Tabela do dig aberta")
 
 	err = chromedp.Run(ctx, selecionaOrganizacoes)
 
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+    log.Print("Aba de organizações selecionada")
 
 	err = chromedp.Run(ctx, abreOpcoesAbreMenu)
 
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+    log.Print("Dropdown de opções foi aberto")
 
 	err = chromedp.Run(ctx, iniciaDownload)
 
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+    log.Print("Download iniciado")
 
 	log.Printf("wrote %s", filepath.Join(wd, <-done))
 
