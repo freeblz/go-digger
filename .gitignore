@@ -21,4 +21,5 @@
 go.work
 
 .env
+config.txt
 go-digger

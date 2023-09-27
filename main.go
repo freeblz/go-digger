@@ -16,7 +16,7 @@ import (
 
 func goDotEnvVariable(key string) string {
 
-	err := godotenv.Load(".env")
+	err := godotenv.Load("config.txt")
 
 	if err != nil {
 		log.Fatal("Erro ao carregar arquivo .env")
@@ -29,20 +29,46 @@ func main() {
 	SECRET := goDotEnvVariable("SECRET_KEY")
 	USER := goDotEnvVariable("USERNAME_JD")
 	PASS := goDotEnvVariable("PASSWORD_JD")
+	CSV_FILEPATH := goDotEnvVariable("CSV_FILEPATH")
 
-    if len(SECRET) == 0 {
-        log.Fatal("Chave SECRET_KEY para autenticação em .env está vazio")
-    }
+	wd, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    if len(USER) == 0 {
-        log.Fatal("Chave USERNAME_JD para autenticação em .env está vazio")
-    }
+	wd = filepath.Join(wd, "Documents")
 
-    if len(PASS) == 0 {
-        log.Fatal("Chave PASSWORD_JD para autenticação em .env está vazio")
-    }
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	if len(SECRET) == 0 {
+		log.Fatal("Chave SECRET_KEY para autenticação em .env está vazio")
+	}
 
+	if len(USER) == 0 {
+		log.Fatal("Chave USERNAME_JD para autenticação em .env está vazio")
+	}
+
+	if len(PASS) == 0 {
+		log.Fatal("Chave PASSWORD_JD para autenticação em .env está vazio")
+	}
+
+	if len(CSV_FILEPATH) == 0 {
+		log.Printf("Chave CSV_FILEPATH para autenticação em .env está vazio\nUtilizando: %s", wd)
+	} else {
+		wd = CSV_FILEPATH
+	}
+
+	if _, err := os.Stat(wd); os.IsNotExist(err) {
+		log.Fatalf("Path: %s is invalid", wd)
+	}
+	isHeadless := true
+	for i := 0; i < len(os.Args); i++ {
+		if os.Args[i] == "--GUI" {
+			isHeadless = false
+		}
+	}
 
 	totp := gotp.NewDefaultTOTP(SECRET)
 
@@ -53,7 +79,7 @@ func main() {
 	defer cancel()
 
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.Flag("headless", true),
+		chromedp.Flag("headless", isHeadless),
 		chromedp.Flag("incognito", true),
 		chromedp.Flag("disable-extensions", true),
 		chromedp.Env("LANGUAGE=pt_BR"),
@@ -84,16 +110,6 @@ func main() {
 			}
 		}
 	})
-
-	wd, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	wd += "/Hectares"
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	if err != nil {
 		log.Fatal(err)
